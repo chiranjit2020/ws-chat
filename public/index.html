@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        #chat-container { display: flex; flex-direction: column; height: 100vh; }
+        #messages { flex: 1; list-style: none; padding: 0; max-height: calc(100vh - 120px); overflow-y: auto; }
+        #messages li { margin-bottom: 10px; }
+        #input-container { display: flex; }
+        #messageInput { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        #sendButton { padding: 10px 20px; border: none; background: #126539; color: white; border-radius: 4px; margin-left: 10px; cursor: pointer; }
+        #sendButton:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <ul id="messages"></ul>
+        <div id="input-container">
+            <input id="messageInput" type="text" placeholder="Type a message..." autofocus />
+            <button id="sendButton" disabled>Send</button>
+        </div>
+    </div>
+    <script>
+        const ws = new WebSocket(`ws://${location.host}`);
+        const messages = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Enable Send button only if there's text in the input
+        messageInput.addEventListener('input', () => {
+            sendButton.disabled = messageInput.value.trim() === '';
+        });
+
+        ws.onmessage = (event) => {
+            const li = document.createElement('li');
+            li.textContent = event.data;
+            messages.appendChild(li);
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        const sendMessage = () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                ws.send(message);
+                messageInput.value = '';
+                sendButton.disabled = true;
+            }
+        };
+
+        // Send message when the button is clicked
+        sendButton.addEventListener('click', sendMessage);
+
+        // Send message on Enter key press
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
